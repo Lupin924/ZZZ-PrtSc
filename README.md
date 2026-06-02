@@ -4,9 +4,21 @@ A high-performance screenshot tool designed for gamers
 
 ## About This Tool
 
-This tool was originally developed to better capture exciting moments in the game Zenless Zone Zero. The game is filled with high-speed action and stunning character skills, making it difficult to capture the perfect shot with ordinary screenshot methods.
+This tool was developed entirely by a gamer who knows nothing about coding, built 100% with AI assistance.
 
-We aim to provide a simple and fast way for players to easily preserve those unforgettable gaming moments.
+### What's This For?
+
+I created this tool because I needed a convenient way to screenshot the main display while playing Zenless Zone Zero (and other games) on my Windows 11 multi-monitor setup. I also wanted to try burst capture to catch those epic in-game moments.
+
+### Future Plans
+
+- Might add actual screenshot examples to demonstrate the tool's capabilities
+- Will test compatibility with more controllers (not just PS5) over time
+
+### Disclaimer
+
+⚠️ **Code quality is not guaranteed** - this is an AI-built project by a non-coder  
+⚠️ **Compatibility limited** - currently only tested with PS5 controller, will test others later
 
 ## Key Features
 
