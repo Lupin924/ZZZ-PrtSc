@@ -18,16 +18,13 @@ from typing import Optional
 _winmm = ctypes.windll.winmm
 
 MAXPNAMELEN = 32
-JOY_RETURNALL = 0xFF
 JOY_RETURNBUTTONS = 0x80
 MMSYSERR_NOERROR = 0
 JOYERR_NOERROR = 0
 
 # XInput constants
-ERROR_DEVICE_NOT_CONNECTED = 1167
 XINPUT_USER_MAX = 4
 XINPUT_GAMEPAD_SHARE = 0x2000  # Xbox Series Share button
-XINPUT_GAMEPAD_VIEW = 0x0020   # View (old Back/Select)
 
 
 
@@ -187,24 +184,28 @@ def _poll_buttons_xinput(user_id: int) -> int:
     return 0
 
 
-def _map_xbox_share_button(wbuttons: int) -> bool:
-    """Xbox Series Share 按钮检测"""
-    return bool(wbuttons & XINPUT_GAMEPAD_SHARE)
-
-
-# ─── 通用按钮索引映射 ───────────────────────────────────────
-BUTTON_MAP = {
-    'ps5_share': 8,
-    'xbox_share': 10,
-    'switch_capture': 8,
-}
-
-
 class GamepadManager:
     """手柄管理器 - 使用 Windows 原生 API 检测手柄输入"""
 
     DETECT_TIMEOUT = 2.0
     SCAN_INTERVAL = 0.1
+
+    _XINPUT_BUTTON_BITS = [
+        0x0001,  # A
+        0x0002,  # B
+        0x0004,  # X
+        0x0008,  # Y
+        0x0010,  # LEFT_BUMPER
+        0x0020,  # RIGHT_BUMPER
+        0x0040,  # LEFT_THUMB
+        0x0080,  # RIGHT_THUMB
+        0x0100,  # BACK
+        0x0200,  # START
+        0x1000,  # DPAD_UP
+        0x2000,  # DPAD_DOWN
+        0x4000,  # DPAD_LEFT
+        0x8000,  # DPAD_RIGHT
+    ]
 
     def __init__(self, signal_bridge) -> None:
         self.signal_bridge = signal_bridge
@@ -218,7 +219,6 @@ class GamepadManager:
         self._dev_id = 0
         self._last_button_states = []
         self._share_button_indices = [8, 10]
-        self._last_connection_status = False
         self._scanning = False
         self._scan_complete = threading.Event()
         self._on_status_change = None
@@ -287,7 +287,6 @@ class GamepadManager:
                 self._api = 'xinput'
                 self._dev_id = ctrl['id']
                 self._connected = True
-                self._last_connection_status = True
                 self.gamepad_name = ctrl['name']
                 self.gamepad_type = 'xbox'
                 self._share_button_indices = [10]
@@ -301,7 +300,6 @@ class GamepadManager:
                 self._api = 'winmm'
                 self._dev_id = ctrl['id']
                 self._connected = True
-                self._last_connection_status = True
                 self.gamepad_name = name
 
                 if 'Sony' in name or 'DualSense' in name or 'PS5' in name:
@@ -324,13 +322,7 @@ class GamepadManager:
 
     def _init_xinput_button_states(self) -> list:
         """初始化 XInput 按钮状态列表"""
-        xinput_buttons = [
-            0x0001, 0x0002, 0x0004, 0x0008,
-            0x0010, 0x0020, 0x0040, 0x0080,
-            0x0100, 0x0200, 0x1000, 0x2000,
-            0x4000, 0x8000,
-        ]
-        return [False] * len(xinput_buttons)
+        return [False] * len(self._XINPUT_BUTTON_BITS)
 
     def _monitor_loop(self) -> None:
         """监控循环 - 检测手柄连接状态和截图按钮"""
@@ -358,7 +350,6 @@ class GamepadManager:
     def _handle_disconnect(self):
         """处理手柄断开连接"""
         self._connected = False
-        self._last_connection_status = False
         self.gamepad_type = None
         self.gamepad_name = "Unknown Controller"
         self._api = None
@@ -413,14 +404,7 @@ class GamepadManager:
 
     def _check_xinput_buttons(self, button_bitmask: int):
         """检测 XInput 手柄的按钮变化"""
-        xinput_button_bits = [
-            0x0001, 0x0002, 0x0004, 0x0008,
-            0x0010, 0x0020, 0x0040, 0x0080,
-            0x0100, 0x0200, 0x1000, 0x2000,
-            0x4000, 0x8000,
-        ]
-
-        for i, bit in enumerate(xinput_button_bits):
+        for i, bit in enumerate(self._XINPUT_BUTTON_BITS):
             if i >= len(self._last_button_states):
                 break
             current_state = bool(button_bitmask & bit)
@@ -459,7 +443,6 @@ class GamepadManager:
             return False
 
         self._connected = False
-        self._last_connection_status = False
         self._api = None
         self.gamepad_type = None
         self.gamepad_name = "Unknown Controller"

@@ -250,8 +250,7 @@ class ScreenshotCapture:
         else:
             target_interval = duration / (total - 1) if total > 1 else duration
         
-        cache = self._burst_cache if len(self._burst_cache) >= total else []
-        cache_size = 0
+        cache = []
         start_time = time.perf_counter()
         
         for frame_idx in range(total):
@@ -259,16 +258,11 @@ class ScreenshotCapture:
                 break
 
             screenshot = self._blt.capture()
-            
             if screenshot:
-                if cache:
-                    cache[cache_size] = screenshot
-                else:
-                    cache.append(screenshot)
-                cache_size += 1
+                cache.append(screenshot)
 
             if on_progress:
-                on_progress(cache_size, total)
+                on_progress(len(cache), total)
 
             if frame_idx < total - 1:
                 current_time = time.perf_counter()
@@ -280,8 +274,8 @@ class ScreenshotCapture:
 
         self._is_bursting = False
 
-        if cache_size > 0:
-            actual_cache = cache[:cache_size] if isinstance(cache, list) else cache
+        if len(cache) > 0:
+            actual_cache = cache
             self._save_thread = threading.Thread(
                 target=self._save_cache_to_disk,
                 args=(actual_cache, save_folder, on_write_start, on_write_progress, on_complete),

@@ -258,7 +258,7 @@ class Win32TrayManager:
     def update_tooltip(self, tooltip: str):
         self._tooltip = tooltip[:127]
         if self._hwnd and self._notify_id:
-            self._update_icon_internal()
+            self._update_tooltip_internal()
 
     def update_menu(self, menu_items: List[Tuple[str, Optional[Callable]]]):
         self._menu_items = []
@@ -406,7 +406,7 @@ class Win32TrayManager:
         self._notify_id = 1
         return bool(self.shell32.Shell_NotifyIconW(NIM_ADD, ctypes.byref(nid)))
 
-    def _update_icon_internal(self):
+    def _update_tooltip_internal(self):
         if not self._hwnd or not self._notify_id:
             return
 
@@ -436,10 +436,6 @@ class Win32TrayManager:
         if not hmenu:
             return
 
-        MF_STRING = 0x00000000
-        MF_ENABLED = 0x00000000
-        MF_DISABLED = 0x00000002
-
         for item in self._menu_items:
             flags = MF_STRING | (MF_ENABLED if item.enabled else MF_DISABLED)
             self.user32.AppendMenuW(hmenu, flags, item.item_id, ctypes.c_wchar_p(item.text))
@@ -447,10 +443,6 @@ class Win32TrayManager:
         pt = POINT()
         self.user32.GetCursorPos(ctypes.byref(pt))
         self.user32.SetForegroundWindow(self._hwnd)
-        
-        TPM_LEFTALIGN = 0x0000
-        TPM_BOTTOMALIGN = 0x0020
-        TPM_RIGHTBUTTON = 0x0002
         
         self.user32.TrackPopupMenu(
             hmenu, 

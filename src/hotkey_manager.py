@@ -9,11 +9,6 @@ from __future__ import annotations
 
 import ctypes
 import threading
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    pass
-
 # Windows API 常量
 WM_QUIT = 0x0012
 VK_SNAPSHOT = 0x2C

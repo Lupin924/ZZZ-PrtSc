@@ -8,6 +8,15 @@ from pathlib import Path
 import customtkinter as ctk
 from PIL import Image
 
+# CTkMessagebox 兼容性处理：新版 customtkinter 已分离为独立包
+try:
+    from CTkMessagebox import CTkMessagebox
+except ImportError:
+    CTkMessagebox = getattr(ctk, 'CTkMessagebox', None)
+    if CTkMessagebox is None:
+        from tkinter import messagebox
+        CTkMessagebox = messagebox
+
 from .hotkey_manager import HotkeyManager
 from .screenshot_capture import ScreenshotCapture
 from .settings_manager import SettingsManager
@@ -523,7 +532,7 @@ class MainWindow:
         print("尝试启动热键管理器...")
         if not self.hotkey_manager:
             print("错误：热键管理器未初始化")
-            ctk.CTkMessagebox(title="错误", message="无法注册热键，请检查权限", icon="warning")
+            CTkMessagebox(title="错误", message="无法注册热键，请检查权限", icon="warning")
             return
         
         print("热键管理器已初始化，尝试启动...")
@@ -531,7 +540,7 @@ class MainWindow:
         print(f"热键启动结果: {success}")
         
         if not success:
-            ctk.CTkMessagebox(title="错误", message="无法注册热键，请检查权限", icon="warning")
+            CTkMessagebox(title="错误", message="无法注册热键，请检查权限", icon="warning")
             return
 
         self.is_running = True
@@ -573,7 +582,7 @@ class MainWindow:
         if self.root.winfo_viewable():
             self.root.after(0, self._do_screenshot)
         else:
-            self.root.after_idle(self._do_screenshot)
+            self.root.after(10, self._do_screenshot)
 
     def _do_screenshot(self):
         try:
@@ -627,78 +636,8 @@ class MainWindow:
 
     def _update_tray_bursting(self):
         if self._tray:
-            icon_image = self._create_bursting_icon()
+            icon_image = self._create_default_icon()
             self._tray.update_icon(icon_image)
-
-    def _create_bursting_icon(self):
-        bg_color = '#E53935'
-        frame_color = '#FFFFFF'
-        
-        img = Image.new('RGBA', (64, 64), color=bg_color)
-        pixels = img.load()
-        frame_rgb = self._hex_to_rgb(frame_color)
-
-        inset = 10
-        border_width = 2
-
-        for y in range(64):
-            for x in range(64):
-                if y >= inset and y < 64 - inset:
-                    if x >= inset and x < inset + border_width:
-                        pixels[x, y] = frame_rgb
-                    if x >= 64 - inset - border_width and x < 64 - inset:
-                        pixels[x, y] = frame_rgb
-
-                if x >= inset and x < 64 - inset:
-                    if y >= inset and y < inset + border_width:
-                        pixels[x, y] = frame_rgb
-                    if y >= 64 - inset - border_width and y < 64 - inset:
-                        pixels[x, y] = frame_rgb
-
-        corner_size = 8
-        for i in range(corner_size):
-            pixels[inset - 1, inset + i] = frame_rgb
-            pixels[inset + i, inset - 1] = frame_rgb
-            pixels[64 - inset, inset + i] = frame_rgb
-            pixels[64 - inset - 1 - i, inset - 1] = frame_rgb
-            pixels[inset - 1, 64 - inset - 1 - i] = frame_rgb
-            pixels[inset + i, 64 - inset] = frame_rgb
-            pixels[64 - inset, 64 - inset - 1 - i] = frame_rgb
-            pixels[64 - inset - 1 - i, 64 - inset] = frame_rgb
-
-        z_width = 10
-        z_height = 14
-        stroke_width = 3
-        z_start_x = 15
-        z_start_y = 25
-
-        def draw_z(x, y):
-            for i in range(z_width):
-                for j in range(stroke_width):
-                    if 0 <= x + i < 64 and 0 <= y + j < 64:
-                        pixels[x + i, y + j] = frame_rgb
-            
-            for i in range(z_width):
-                for j in range(stroke_width):
-                    if 0 <= x + i < 64 and 0 <= y + z_height - stroke_width + j < 64:
-                        pixels[x + i, y + z_height - stroke_width + j] = frame_rgb
-            
-            for i in range(stroke_width):
-                for j in range(z_height):
-                    if 0 <= x + i < 64 and 0 <= y + j < 64:
-                        pixels[x + i, y + j] = frame_rgb
-            
-            for i in range(z_width):
-                for j in range(stroke_width):
-                    py = y + z_height - stroke_width - int((z_height - stroke_width) * (i / z_width))
-                    if 0 <= x + i + stroke_width < 64 and 0 <= py + j < 64:
-                        pixels[x + i + stroke_width, py + j] = frame_rgb
-
-        draw_z(z_start_x, z_start_y)
-        draw_z(z_start_x + z_width + 3, z_start_y)
-        draw_z(z_start_x + z_width * 2 + 6, z_start_y)
-
-        return img
 
     def _on_burst_complete(self, count):
         self.status_label.configure(text="状态：运行中", text_color="#4CAF50")
@@ -1035,11 +974,11 @@ class BurstSettingsDialog:
         fps_str = self.fps_var.get().strip()
 
         if not duration_str:
-            ctk.CTkMessagebox(title="错误", message="请输入连拍时长", icon="warning")
+            CTkMessagebox(title="错误", message="请输入连拍时长", icon="warning")
             return
 
         if not fps_str:
-            ctk.CTkMessagebox(title="错误", message="请输入拍摄频率", icon="warning")
+            CTkMessagebox(title="错误", message="请输入拍摄频率", icon="warning")
             return
 
         try:
@@ -1047,11 +986,11 @@ class BurstSettingsDialog:
             fps = int(fps_str)
 
             if duration <= 0:
-                ctk.CTkMessagebox(title="错误", message="连拍时长必须大于0", icon="warning")
+                CTkMessagebox(title="错误", message="连拍时长必须大于0", icon="warning")
                 return
 
             if fps <= 0:
-                ctk.CTkMessagebox(title="错误", message="拍摄频率必须大于0", icon="warning")
+                CTkMessagebox(title="错误", message="拍摄频率必须大于0", icon="warning")
                 return
 
             self.result = {
@@ -1060,7 +999,7 @@ class BurstSettingsDialog:
                 "save_folder": self.folder_var.get()
             }
         except ValueError:
-            ctk.CTkMessagebox(title="错误", message="请输入有效的数字", icon="warning")
+            CTkMessagebox(title="错误", message="请输入有效的数字", icon="warning")
             return
 
         self.dialog.destroy()
