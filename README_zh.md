@@ -32,6 +32,18 @@
 
 ![截图示例 4](screenshots/screenshot_20260603_230955_326690.png)
 
+![截图示例 5](screenshots/screenshot_20260601_212937_959518.png)
+
+![截图示例 6](screenshots/screenshot_20260601_212938_160704.png)
+
+![截图示例 7](screenshots/screenshot_20260601_212938_593810.png)
+
+![截图示例 8](screenshots/screenshot_20260524_093913_6.png)
+
+![截图示例 9](screenshots/screenshot_20260524_094821_1.png)
+
+![截图示例 10](screenshots/screenshot_20260524_094821_2.png)
+
 ## 主要特点
 
 - **一键截图**：按下 PrintScreen 键即可快速捕获当前屏幕

@@ -32,6 +32,18 @@ Here are some examples of in-game screenshots captured using ZZZ PrtSc:
 
 ![Screenshot Example 4](screenshots/screenshot_20260603_230955_326690.png)
 
+![Screenshot Example 5](screenshots/screenshot_20260601_212937_959518.png)
+
+![Screenshot Example 6](screenshots/screenshot_20260601_212938_160704.png)
+
+![Screenshot Example 7](screenshots/screenshot_20260601_212938_593810.png)
+
+![Screenshot Example 8](screenshots/screenshot_20260524_093913_6.png)
+
+![Screenshot Example 9](screenshots/screenshot_20260524_094821_1.png)
+
+![Screenshot Example 10](screenshots/screenshot_20260524_094821_2.png)
+
 ## Key Features
 
 - **One-Click Screenshot**: Press the PrintScreen key to quickly capture the current screen
