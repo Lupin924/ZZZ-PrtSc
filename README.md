@@ -22,19 +22,15 @@ I created this tool because I needed a convenient way to screenshot the main dis
 
 ## Screenshots
 
-Here are some examples of screenshots captured using ZZZ PrtSc:
+Here are some examples of in-game screenshots captured using ZZZ PrtSc:
 
-### Main Interface
-![Main Interface](screenshots/screenshot_20260603_230852_973258.png)
+![Screenshot Example 1](screenshots/screenshot_20260603_230852_973258.png)
 
-### Tray Menu
-![Tray Menu](screenshots/screenshot_20260603_230924_079974.png)
+![Screenshot Example 2](screenshots/screenshot_20260603_230924_079974.png)
 
-### Burst Mode Settings
-![Burst Mode Settings](screenshots/screenshot_20260603_230924_294566.png)
+![Screenshot Example 3](screenshots/screenshot_20260603_230924_294566.png)
 
-### Controller Status
-![Controller Status](screenshots/screenshot_20260603_230955_326690.png)
+![Screenshot Example 4](screenshots/screenshot_20260603_230955_326690.png)
 
 ## Key Features
 

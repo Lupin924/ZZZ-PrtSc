@@ -22,19 +22,15 @@
 
 ## 使用截图
 
-以下是使用 ZZZ PrtSc 捕获的一些截图示例：
+以下是使用 ZZZ PrtSc 捕获的游戏画面截图示例：
 
-### 主界面
-![主界面](screenshots/screenshot_20260603_230852_973258.png)
+![截图示例 1](screenshots/screenshot_20260603_230852_973258.png)
 
-### 托盘菜单
-![托盘菜单](screenshots/screenshot_20260603_230924_079974.png)
+![截图示例 2](screenshots/screenshot_20260603_230924_079974.png)
 
-### 连拍模式设置
-![连拍模式设置](screenshots/screenshot_20260603_230924_294566.png)
+![截图示例 3](screenshots/screenshot_20260603_230924_294566.png)
 
-### 手柄状态
-![手柄状态](screenshots/screenshot_20260603_230955_326690.png)
+![截图示例 4](screenshots/screenshot_20260603_230955_326690.png)
 
 ## 主要特点
 
