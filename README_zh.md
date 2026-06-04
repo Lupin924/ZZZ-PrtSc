@@ -22,6 +22,14 @@
 
 ## 使用截图
 
+### 软件界面
+
+![主界面](screenshots/main_interface.jpg)
+
+![连拍设置](screenshots/burst_settings.jpg)
+
+### 游戏画面示例
+
 以下是使用 ZZZ PrtSc 捕获的游戏画面截图示例：
 
 ![截图示例 1](screenshots/screenshot_20260603_230852_973258.png)
@@ -31,18 +39,6 @@
 ![截图示例 3](screenshots/screenshot_20260603_230924_294566.png)
 
 ![截图示例 4](screenshots/screenshot_20260603_230955_326690.png)
-
-![截图示例 5](screenshots/screenshot_20260601_212937_959518.png)
-
-![截图示例 6](screenshots/screenshot_20260601_212938_160704.png)
-
-![截图示例 7](screenshots/screenshot_20260601_212938_593810.png)
-
-![截图示例 8](screenshots/screenshot_20260524_093913_6.png)
-
-![截图示例 9](screenshots/screenshot_20260524_094821_1.png)
-
-![截图示例 10](screenshots/screenshot_20260524_094821_2.png)
 
 ## 主要特点
 
