@@ -1,170 +1,116 @@
-# ZZZ PrtSc
+# ZZZ PrtSc - Gamer's Screenshot Tool
 
-A high-performance screenshot tool designed for gamers
+## Hey Proxies!
 
-## About This Tool
+As a big fan of Zenless Zone Zero, I struggled finding a good screenshot tool for my multi-monitor Windows 11 setup. Most tools were too complicated or didn't support controller shortcuts.
 
-This tool was developed entirely by a gamer who knows nothing about coding, built 100% with AI assistance.
+So I decided to make my own! Yep, I know nothing about coding - this was 100% built with AI help. If you're also a gamer, hope this tool helps you capture those epic moments!
 
-### What's This For?
+---
 
-I created this tool because I needed a convenient way to screenshot the main display while playing Zenless Zone Zero (and other games) on my Windows 11 multi-monitor setup. I also wanted to try burst capture to catch those epic in-game moments.
+## Why I Built This
 
-### Future Plans
+- 🎮 Pressing PrintScreen on multi-monitor setup captures ALL screens - so annoying!
+- 📸 Regular screenshot tools are too slow for fast-paced gaming action
+- 🎯 Wanted burst capture mode to catch those perfect combat moments
+- 🔌 PS5 DualSense Create button was going to waste!
 
-- Might add actual screenshot examples to demonstrate the tool's capabilities
-- Will test compatibility with more controllers (not just PS5) over time
+---
 
-### Disclaimer
+## Features
 
-⚠️ **Code quality is not guaranteed** - this is an AI-built project by a non-coder  
-⚠️ **Compatibility limited** - currently only tested with PS5 controller, will test others later
+- **One-Click Screenshot**: Press PrintScreen key for instant screenshot
+- **Controller Support**: Works with PS5/Xbox/Switch controllers!
+  - PS5 DualSense: Press Create button
+  - Xbox: Press Share button
+  - Switch Pro: Press Capture button
+- **Burst Mode**: Capture multiple frames in succession, never miss a moment
+- **Quiet Operation**: Minimizes to system tray, won't interrupt your game
+- **Smart Detection**: Automatically detects controllers on startup
+
+---
+
+## How to Use
+
+### Download & Install
+1. Go to the [Releases](https://github.com/Lupin924/ZZZ-PrtSc/releases) page
+2. Download the latest version and run `ZZZ_PrtSc.exe` - no installation needed!
+
+### Basic Operation
+1. Launch the program - you'll see a small icon in the system tray
+2. Press PrintScreen or your controller's screenshot button
+3. Screenshots are saved automatically (you can change the folder in settings)
+
+### Burst Mode
+1. Right-click the tray icon and select "Burst Mode"
+2. Set duration (1-10 seconds) and frames per second (1-10)
+3. Press the screenshot button to start - it will auto-save all frames
+
+### Controller Connection
+- Auto-detects controllers on startup (max 2 second wait)
+- Click the controller icon in the main window to re-scan
+
+---
 
 ## Screenshots
 
 ### Application Interface
 
+Simple and clean main interface:
+
 ![Main Interface](screenshots/main_interface.jpg)
 
-![Burst Mode Settings](screenshots/burst_settings.jpg)
+Burst mode settings window:
+
+![Burst Settings](screenshots/burst_settings.jpg)
 
 ### In-Game Examples
 
-Here are some examples of in-game screenshots captured using ZZZ PrtSc:
+Here are some actual in-game screenshots captured with ZZZ PrtSc:
 
-![Screenshot Example 1](screenshots/screenshot_20260603_230852_973258.png)
+![Game Screenshot 1](screenshots/screenshot_20260603_230852_973258.png)
 
-![Screenshot Example 2](screenshots/screenshot_20260603_230924_079974.png)
+![Game Screenshot 2](screenshots/screenshot_20260603_230924_079974.png)
 
-![Screenshot Example 3](screenshots/screenshot_20260603_230924_294566.png)
+![Game Screenshot 3](screenshots/screenshot_20260603_230924_294566.png)
 
-![Screenshot Example 4](screenshots/screenshot_20260603_230955_326690.png)
+![Game Screenshot 4](screenshots/screenshot_20260603_230955_326690.png)
 
-## Key Features
+![Game Screenshot 5](screenshots/screenshot_20260601_212937_959518.png)
 
-- **One-Click Screenshot**: Press the PrintScreen key to quickly capture the current screen
-- **Burst Mode**: Capture multiple frames in succession, never miss any exciting moment
-- **Controller Support**: Works with screenshot/share buttons on major game controllers (PS5 DualSense, Xbox, Switch Pro)
-- **Smart Scanning**: Automatically scans for controllers on startup with 2-second timeout to avoid resource consumption
-- **Manual Scan**: Provides a button to manually scan for controllers
-- **Status Indication**: Real-time display of controller connection status and operation hints
-- **Quiet Operation**: Minimizes to system tray, won't interrupt your gaming experience
-- **Persistent Settings**: Settings are automatically saved and restored on restart
+![Game Screenshot 6](screenshots/screenshot_20260601_212938_160704.png)
 
-## System Requirements
+![Game Screenshot 7](screenshots/screenshot_20260601_212938_593810.png)
 
-- Windows 10 or Windows 11
-- x64 architecture supported
+![Game Screenshot 8](screenshots/screenshot_20260524_093913_6.png)
 
-## Usage
+![Game Screenshot 9](screenshots/screenshot_20260524_094821_1.png)
 
-### Installation
+![Game Screenshot 10](screenshots/screenshot_20260524_094821_2.png)
 
-Simply download the latest executable file and run it, no additional dependencies required.
+![Game Screenshot 11](screenshots/screenshot_20260524_094822_4.png)
 
-### Basic Operations
+![Game Screenshot 12](screenshots/screenshot_20260524_094935_1.png)
 
-1. **Launch the Program**: After running ZZZ PrtSc, it will run quietly in the system tray
-2. **Normal Screenshot**: Press the `PrintScreen` key on your keyboard to capture the current screen
-3. **Controller Screenshot**: Press the screenshot/share button on your controller
-   - PS5 DualSense: Press Create button
-   - Xbox: Press Share button
-   - Switch Pro: Press Capture button
+![Game Screenshot 13](screenshots/screenshot_20260524_095812_2.png)
 
-### Burst Capture Function
-
-1. Left-click the system tray icon and select "Burst Mode"
-2. Set the burst duration and capture frequency
-3. Press the screenshot button to start burst capture, the program will automatically complete and save
-
-### Controller Scanning
-
-1. **Auto Scan**: The program automatically scans for connected controllers on startup (max 2 seconds)
-2. **Manual Scan**: Click the 🎮 button on the main interface to re-scan for controllers
-3. **Status Display**: The main interface shows current controller status
-   - 🔍 Scanning for controller...
-   - 🎮 No controller detected, use PrintScreen for screenshots
-   - 🎮 PS5 DualSense connected, press [Create] to screenshot
-   - 🎮 Xbox controller connected, press [Share] to screenshot
-   - 🎮 Switch Pro connected, press [Capture] to screenshot
-
-### Settings
-
-- Customizable burst duration (1-10 seconds)
-- Adjustable capture frequency (1-10 frames/second)
-- Customizable screenshot save folder location
-
-## Notes
-
-- This tool is for personal screenshot and sharing purposes only
-- Please comply with the user agreements of related games
-- For best results, use in fullscreen mode
-- Settings are saved to `%APPDATA%\ZZZ PrtSc\settings.json`
-
-## License
-
-MIT License
-
-This tool is built based on open source software, all third-party libraries follow their respective open source licenses.
-
-***
-
-**May every Proxy catch all the amazing moments of their Agents!**
+![Game Screenshot 14](screenshots/screenshot_20260524_103124_4.png)
 
 ---
 
-## Technical Details
+## Notes
 
-### Built With
+- Only tested on Windows 10/11
+- Only tested with PS5 DualSense so far, Xbox/Switch Pro should work
+- Settings saved to `%APPDATA%\ZZZ PrtSc\settings.json`
 
-- **Python 3.11** - Programming language
-- **CustomTkinter** - Modern GUI framework
-- **Win32 API** - System tray and hotkey handling
-- **Pillow** - Image processing
-- **PyInstaller** - Application packaging
+---
 
-### Project Structure
+## Disclaimer
 
-```
-ZZZ PrtSc/
-├── src/
-│   ├── main.py          # Main application entry
-│   ├── hotkey_manager.py # PrintScreen hotkey handling
-│   ├── gamepad_manager.py # Controller input handling
-│   ├── screenshot_capture.py # Screenshot capture logic
-│   ├── settings_manager.py # Settings persistence
-│   └── tray_manager.py   # System tray integration
-├── main.py              # Application entry point
-├── app_icon.png         # Application icon (PNG)
-├── app_icon.ico         # Application icon (ICO)
-├── make_ico.py          # ICO generation script
-├── build.py             # Build script
-├── final_build.py       # Alternative build script
-├── requirements.txt     # Dependencies
-├── LICENSE              # MIT License
-├── README.md            # English documentation
-└── README_zh.md         # Chinese documentation
-```
+⚠️ **Code quality not guaranteed** - I don't know how to code!
+⚠️ **May not fix bugs** - but feel free to suggest improvements!
 
-### Building from Source
+---
 
-```bash
-# Install dependencies
-pip install -r requirements.txt
-
-# Build executable
-python build.py
-
-# Or use PyInstaller directly
-python -m PyInstaller --name ZZZ_PrtSc --onefile --windowed --icon app_icon.ico main.py
-```
-
-### Controller Button Mapping
-
-| Controller | Screenshot Button | Button Index |
-|------------|-------------------|--------------|
-| PS5 DualSense | Create | 8 |
-| Xbox Series | Share | 10 |
-| Switch Pro | Capture | 8 |
-
-The application uses Windows native APIs (XInput and WinMM) for controller detection, ensuring minimal overhead and reliable button detection.
+**May every Proxy capture all the amazing moments of their Agents!** 📸✨
