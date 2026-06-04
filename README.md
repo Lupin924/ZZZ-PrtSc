@@ -20,6 +20,22 @@ I created this tool because I needed a convenient way to screenshot the main dis
 ⚠️ **Code quality is not guaranteed** - this is an AI-built project by a non-coder  
 ⚠️ **Compatibility limited** - currently only tested with PS5 controller, will test others later
 
+## Screenshots
+
+Here are some examples of screenshots captured using ZZZ PrtSc:
+
+### Main Interface
+![Main Interface](screenshots/screenshot_20260603_230852_973258.png)
+
+### Tray Menu
+![Tray Menu](screenshots/screenshot_20260603_230924_079974.png)
+
+### Burst Mode Settings
+![Burst Mode Settings](screenshots/screenshot_20260603_230924_294566.png)
+
+### Controller Status
+![Controller Status](screenshots/screenshot_20260603_230955_326690.png)
+
 ## Key Features
 
 - **One-Click Screenshot**: Press the PrintScreen key to quickly capture the current screen
