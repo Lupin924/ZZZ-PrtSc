@@ -248,7 +248,7 @@ class MainWindow:
             command=self._toggle_replay_mode,
             border_width=0
         )
-        self.replay_button.pack(side=ctk.LEFT, padx=5)
+        self.replay_button.pack(padx=5)
 
         param_frame = ctk.CTkFrame(self._main_frame, fg_color="#f8f8f8", corner_radius=8)
         param_frame.pack(fill=ctk.X, padx=24, pady=(0, 18))
