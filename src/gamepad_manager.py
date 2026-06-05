@@ -24,7 +24,6 @@ JOYERR_NOERROR = 0
 
 # XInput constants
 XINPUT_USER_MAX = 4
-XINPUT_GAMEPAD_SHARE = 0x2000  # Xbox Series Share button
 
 
 
@@ -191,20 +190,20 @@ class GamepadManager:
     SCAN_INTERVAL = 0.1
 
     _XINPUT_BUTTON_BITS = [
-        0x0001,  # A
-        0x0002,  # B
-        0x0004,  # X
-        0x0008,  # Y
-        0x0010,  # LEFT_BUMPER
-        0x0020,  # RIGHT_BUMPER
+        0x0001,  # DPAD_UP
+        0x0002,  # DPAD_DOWN
+        0x0004,  # DPAD_LEFT
+        0x0008,  # DPAD_RIGHT
+        0x0010,  # START (Menu)
+        0x0020,  # BACK (View / Share)
         0x0040,  # LEFT_THUMB
         0x0080,  # RIGHT_THUMB
-        0x0100,  # BACK
-        0x0200,  # START
-        0x1000,  # DPAD_UP
-        0x2000,  # DPAD_DOWN
-        0x4000,  # DPAD_LEFT
-        0x8000,  # DPAD_RIGHT
+        0x0100,  # LEFT_SHOULDER (LB)
+        0x0200,  # RIGHT_SHOULDER (RB)
+        0x1000,  # A
+        0x2000,  # B
+        0x4000,  # X
+        0x8000,  # Y
     ]
 
     def __init__(self, signal_bridge) -> None:
@@ -289,7 +288,7 @@ class GamepadManager:
                 self._connected = True
                 self.gamepad_name = ctrl['name']
                 self.gamepad_type = 'xbox'
-                self._share_button_indices = [10]
+                self._share_button_indices = [5]  # View/Back 按钮 (XINPUT_GAMEPAD_BACK)
                 self._last_button_states = self._init_xinput_button_states()
                 return True
 

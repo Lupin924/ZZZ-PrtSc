@@ -86,7 +86,7 @@ MF_ENABLED = 0x00000000
 MF_DISABLED = 0x00000002
 
 
-def _create_simple_icon() -> int:
+def _create_simple_icon() -> Optional[int]:
     """创建简单图标 - 使用系统图标作为基础"""
     _user32 = ctypes.windll.user32
     hicon = _user32.LoadIconW(None, 32512)  # IDI_APPLICATION
@@ -283,7 +283,7 @@ class Win32TrayManager:
                 if self._on_double_click:
                     try:
                         self._on_double_click()
-                    except:
+                    except Exception:
                         pass
             return 0
         elif msg == WM_COMMAND:
@@ -306,7 +306,7 @@ class Win32TrayManager:
                 ctypes.c_void_p(wparam),
                 ctypes.c_void_p(lparam)
             )
-        except:
+        except Exception:
             return 0
 
     def _run(self):

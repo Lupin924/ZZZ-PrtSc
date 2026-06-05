@@ -6,7 +6,7 @@ import sys
 import shutil
 from pathlib import Path
 
-VERSION = "1.0.3"
+VERSION = "1.1.0"
 APP_NAME = "ZZZ_PrtSc"
 
 
@@ -84,6 +84,7 @@ def main():
         "--exclude-module", "opencv-python",
         "--exclude-module", "scikit-image",
         "--exclude-module", "sounddevice",
+        "--exclude-module", "dxcam",
         "--clean",
         str(project_root / "main.py"),
     ]

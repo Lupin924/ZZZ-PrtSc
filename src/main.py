@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import os
 import sys
 import threading
 from pathlib import Path
@@ -19,9 +20,10 @@ except ImportError:
 
 from .hotkey_manager import HotkeyManager
 from .screenshot_capture import ScreenshotCapture
-from .settings_manager import SettingsManager
+from .settings_manager import SettingsManager, SettingsDialog
 from .gamepad_manager import GamepadManager
 from .tray_manager import Win32TrayManager
+from .instant_replay import InstantReplay
 
 
 class SignalBridge:
@@ -60,13 +62,16 @@ class MainWindow:
         self.hotkey_manager = None
         self.screenshot_capture = ScreenshotCapture()
         self.gamepad_manager = None
+        self.instant_replay = None
         self.is_running = True
         self.is_burst_mode = False
+        self.is_replay_mode = False
         self.root = ctk.CTk()
         self._tray = None
         self._main_frame = None
         self._tooltip_frame = None
         self._tooltip_label = None
+        self._notification_window = None
 
         self.burst_duration = self.settings.get("burst_duration", 3)
         self.burst_fps = self.settings.get("burst_fps", 3)
@@ -74,10 +79,18 @@ class MainWindow:
             "burst_save_folder",
             str(Path.home() / "Pictures" / "Screenshots" / "Burst")
         )
+        
+        self.replay_duration = self.settings.get("replay_duration", 5)
+        self.replay_fps = self.settings.get("replay_fps", 30)
+        self.replay_save_folder = self.settings.get(
+            "replay_save_folder",
+            str(Path.home() / "Pictures" / "Screenshots" / "Replay")
+        )
 
         self._init_ui()
         self._init_tray()
         self._init_hotkey()
+        self._init_replay()
         self._connect_signals()
         self._start_capture()
 
@@ -85,7 +98,7 @@ class MainWindow:
 
     def _init_ui(self):
         self.root.title("ZZZ PrtSc - 绝区零截图工具")
-        self.root.geometry("475x343")
+        self.root.geometry("475x410")
         self.root.resizable(False, False)
         self.root.configure(fg_color="#f5f5f5")
 
@@ -116,7 +129,7 @@ class MainWindow:
         folder_btn = ctk.CTkButton(
             right_btn_frame,
             text="📂",
-            command=self._open_burst_folder,
+            command=self._open_save_folder,
             width=36,
             height=34,
             corner_radius=4,
@@ -150,13 +163,13 @@ class MainWindow:
         settings_btn = ctk.CTkButton(
             right_btn_frame,
             text="⚙️",
-            command=self._show_burst_settings,
+            command=self._show_settings,
             width=36,
             height=34,
-            corner_radius=4,
-            fg_color="#f0f0f0",
+            corner_radius=6,
+            fg_color="#f5f5f5",
             text_color="#666666",
-            hover_color="#e0e0e0",
+            hover_color="#e8e8e8",
             font=("Microsoft YaHei", 16),
             border_width=1,
             border_color="#e0e0e0"
@@ -218,6 +231,25 @@ class MainWindow:
         )
         self.burst_button.pack(side=ctk.RIGHT, padx=5)
 
+        replay_button_frame = ctk.CTkFrame(self._main_frame, fg_color="transparent")
+        replay_button_frame.pack(fill=ctk.X, padx=24, pady=(0, 18))
+
+        self.replay_button = ctk.CTkButton(
+            replay_button_frame,
+            text="🎬 即时回放",
+            width=175,
+            height=50,
+            corner_radius=10,
+            font=("Microsoft YaHei", 16, "bold"),
+            fg_color="#9C27B0",
+            hover_color="#7B1FA2",
+            text_color="#ffffff",
+            state=ctk.NORMAL,
+            command=self._toggle_replay_mode,
+            border_width=0
+        )
+        self.replay_button.pack(side=ctk.LEFT, padx=5)
+
         param_frame = ctk.CTkFrame(self._main_frame, fg_color="#f8f8f8", corner_radius=8)
         param_frame.pack(fill=ctk.X, padx=24, pady=(0, 18))
 
@@ -227,18 +259,26 @@ class MainWindow:
         self.duration_label = ctk.CTkLabel(
             param_inner,
             text=f"连拍时长: {self.burst_duration}秒",
-            font=("Microsoft YaHei", 14),
+            font=("Microsoft YaHei", 13),
             text_color="#666666"
         )
         self.duration_label.pack(side=ctk.LEFT)
 
         self.fps_label = ctk.CTkLabel(
             param_inner,
-            text=f"拍摄频率: {self.burst_fps}张/秒",
-            font=("Microsoft YaHei", 14),
+            text=f"频率: {self.burst_fps}张/秒",
+            font=("Microsoft YaHei", 13),
             text_color="#666666"
         )
-        self.fps_label.pack(side=ctk.RIGHT)
+        self.fps_label.pack(side=ctk.LEFT, padx=20)
+
+        self.replay_label = ctk.CTkLabel(
+            param_inner,
+            text=f"回放: {self.replay_duration}秒/{self.replay_fps}fps",
+            font=("Microsoft YaHei", 13),
+            text_color="#666666"
+        )
+        self.replay_label.pack(side=ctk.RIGHT)
 
         footer_frame = ctk.CTkFrame(self._main_frame, fg_color="transparent")
         footer_frame.pack(fill=ctk.X, padx=24, pady=(0, 24))
@@ -252,6 +292,7 @@ class MainWindow:
         tip_label.pack(side=ctk.LEFT, anchor="w")
 
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
+        self.root.protocol("WM_ICONIFY", self._on_minimize)
 
     def _init_tray(self):
         icon_image = self._create_default_icon()
@@ -260,7 +301,7 @@ class MainWindow:
             ("显示主窗口", self._show_main_window),
             ("开启/停止", self._toggle_capture),
             ("连拍模式", self._toggle_burst_mode),
-            ("连拍设置", self._show_burst_settings),
+            ("⚙️ 设置", self._show_settings),
             ("退出", self._quit_app),
         ]
 
@@ -279,14 +320,23 @@ class MainWindow:
             return
 
         icon_image = self._create_default_icon()
-        tooltip = "ZZZ PrtSc - 绝区零截图工具" + (" (连拍)" if self.is_burst_mode else "")
+        
+        if self.is_replay_mode:
+            tooltip = "ZZZ PrtSc - 绝区零截图工具 (即时回放)"
+        elif self.is_burst_mode:
+            tooltip = "ZZZ PrtSc - 绝区零截图工具 (连拍)"
+        else:
+            tooltip = "ZZZ PrtSc - 绝区零截图工具"
+        
         burst_mode_label = "退出连拍" if self.is_burst_mode else "连拍模式"
+        replay_mode_label = "退出回放" if self.is_replay_mode else "即时回放"
 
         menu_items = [
             ("显示主窗口", self._show_main_window),
             ("开启/停止", self._toggle_capture),
             (burst_mode_label, self._toggle_burst_mode),
-            ("连拍设置", self._show_burst_settings),
+            (replay_mode_label, self._toggle_replay_mode),
+            ("⚙️ 设置", self._show_settings),
             ("退出", self._quit_app),
         ]
 
@@ -295,7 +345,10 @@ class MainWindow:
         self._tray.update_menu(menu_items)
 
     def _create_default_icon(self):
-        if self.is_burst_mode:
+        if self.is_replay_mode:
+            bg_color = '#9C27B0'
+            frame_color = '#FFFFFF'
+        elif self.is_burst_mode:
             bg_color = '#E53935'
             frame_color = '#FFFFFF'
         elif self.is_running:
@@ -446,6 +499,15 @@ class MainWindow:
             thread = threading.Thread(target=do_refresh, daemon=True)
             thread.start()
 
+    def _init_replay(self):
+        """初始化即时回放管理器"""
+        self.instant_replay = InstantReplay()
+        self.instant_replay.set_config(
+            duration=self.replay_duration,
+            fps=self.replay_fps,
+            output_folder=self.replay_save_folder
+        )
+
     def _connect_signals(self):
         self.signal_bridge.connect_screenshot(self._take_screenshot)
         self.signal_bridge.connect_exit(self._quit_app)
@@ -487,31 +549,45 @@ class MainWindow:
 
         self._update_tray()
 
-    def _show_burst_settings(self):
-        dialog = BurstSettingsDialog(self.root, {
+    def _show_settings(self):
+        dialog = SettingsDialog(self.root, {
             "burst_duration": self.burst_duration,
             "burst_fps": self.burst_fps,
-            "burst_save_folder": self.burst_save_folder
+            "burst_save_folder": self.burst_save_folder,
+            "replay_duration": self.replay_duration,
+            "replay_fps": self.replay_fps,
+            "replay_save_folder": self.replay_save_folder
         })
 
-        result = dialog.show()
+        self.root.wait_window(dialog.dialog)
+        result = dialog.result
         if result:
-            self.burst_duration = result["duration"]
-            self.burst_fps = result["fps"]
-            self.burst_save_folder = result["save_folder"]
+            self.burst_duration = result["burst_duration"]
+            self.burst_fps = result["burst_fps"]
+            self.burst_save_folder = result["burst_save_folder"]
+            self.replay_duration = result["replay_duration"]
+            self.replay_fps = result["replay_fps"]
+            self.replay_save_folder = result["replay_save_folder"]
 
             self.settings.save({
                 "burst_duration": self.burst_duration,
                 "burst_fps": self.burst_fps,
-                "burst_save_folder": self.burst_save_folder
+                "burst_save_folder": self.burst_save_folder,
+                "replay_duration": self.replay_duration,
+                "replay_fps": self.replay_fps,
+                "replay_save_folder": self.replay_save_folder
             })
 
             self.duration_label.configure(text=f"连拍时长: {self.burst_duration}秒")
-            self.fps_label.configure(text=f"拍摄频率: {self.burst_fps}张/秒")
+            self.fps_label.configure(text=f"频率: {self.burst_fps}张/秒")
+            self.replay_label.configure(text=f"回放: {self.replay_duration}秒/{self.replay_fps}fps")
 
     def _toggle_burst_mode(self):
         if not self.is_running:
             return
+        
+        if self.is_replay_mode:
+            self._toggle_replay_mode()
 
         self.is_burst_mode = not self.is_burst_mode
         self.settings.save({"burst_mode_enabled": self.is_burst_mode})
@@ -521,6 +597,67 @@ class MainWindow:
             self.screenshot_capture.prepare_for_burst(max_count)
         
         self._update_ui_for_burst_mode()
+
+    def _toggle_replay_mode(self):
+        if not self.is_running:
+            return
+        
+        if self.is_burst_mode:
+            self.is_burst_mode = False
+            self.settings.save({"burst_mode_enabled": False})
+            self._update_ui_for_burst_mode()
+
+        self.is_replay_mode = not self.is_replay_mode
+        self.settings.save({"replay_mode_enabled": self.is_replay_mode})
+        
+        if self.is_replay_mode:
+            self.instant_replay.set_config(
+                duration=self.replay_duration,
+                fps=self.replay_fps,
+                output_folder=self.replay_save_folder
+            )
+            self.instant_replay.start()
+        else:
+            self.instant_replay.stop()
+        
+        self._update_ui_for_replay_mode()
+
+    def _update_ui_for_replay_mode(self):
+        if self.is_replay_mode:
+            self.mode_label.configure(text="🎬 即时回放")
+            self.replay_button.configure(
+                text="⏹️ 退出回放",
+                fg_color="#E54D4D",
+                hover_color="#D63D3D",
+                text_color="#ffffff",
+                state=ctk.NORMAL
+            )
+            bg_color = "#f5f0fa"
+        else:
+            self.mode_label.configure(text="📷 普通模式")
+            if self.is_running:
+                self.replay_button.configure(
+                    text="🎬 即时回放",
+                    fg_color="#9C27B0",
+                    hover_color="#7B1FA2",
+                    text_color="#ffffff",
+                    state=ctk.NORMAL
+                )
+            else:
+                self.replay_button.configure(
+                    text="🎬 即时回放",
+                    fg_color="#e8e8e8",
+                    hover_color="#e8e8e8",
+                    text_color="#aaaaaa",
+                    state=ctk.DISABLED
+                )
+            bg_color = "#fafafa"
+
+        self.root.configure(fg_color=bg_color)
+        if self._main_frame:
+            self._main_frame.configure(fg_color=bg_color)
+        
+        self._update_tray()
 
     def _toggle_capture(self):
         if not self.is_running:
@@ -568,15 +705,24 @@ class MainWindow:
     def _stop_capture(self):
         if self.hotkey_manager:
             self.hotkey_manager.stop()
+        
+        if self.instant_replay:
+            self.instant_replay.stop()
 
         self.is_running = False
         self.toggle_button.configure(text="开启", fg_color="#2196F3", hover_color="#1976D2")
         self.status_label.configure(text="状态：已停止", text_color="#999")
-        self.settings.save({"enabled": False})
 
+        save_updates = {"enabled": False}
         if self.is_burst_mode:
             self.is_burst_mode = False
+            save_updates["burst_mode_enabled"] = False
+        if self.is_replay_mode:
+            self.is_replay_mode = False
+            save_updates["replay_mode_enabled"] = False
+        self.settings.save(save_updates)
         self._update_ui_for_burst_mode()
+        self._update_ui_for_replay_mode()
 
     def _take_screenshot(self):
         if self.root.winfo_viewable():
@@ -586,7 +732,9 @@ class MainWindow:
 
     def _do_screenshot(self):
         try:
-            if self.is_burst_mode:
+            if self.is_replay_mode:
+                self._save_replay()
+            elif self.is_burst_mode:
                 if self.screenshot_capture.is_bursting():
                     return
 
@@ -634,6 +782,37 @@ class MainWindow:
         except Exception as e:
             print(f"截图失败: {e}")
 
+    def _save_replay(self):
+        """保存即时回放视频"""
+        if not self.instant_replay or not self.instant_replay.is_recording():
+            return
+        
+        self.status_label.configure(
+            text="状态：正在保存回放视频...",
+            text_color="#9C27B0"
+        )
+        
+        def on_progress(current, total):
+            self.root.after(0, lambda: self.status_label.configure(
+                text=f"状态：正在编码视频 {current}/{total}",
+                text_color="#9C27B0"
+            ))
+        
+        def save_replay_async():
+            success = self.instant_replay.save_replay(on_progress)
+            self.root.after(0, lambda: self._on_replay_complete(success))
+        
+        thread = threading.Thread(target=save_replay_async, daemon=True)
+        thread.start()
+
+    def _on_replay_complete(self, success):
+        if success:
+            self.status_label.configure(text="状态：运行中", text_color="#4CAF50")
+            self._show_notification("回放保存成功", f"已保存{self.replay_duration}秒视频")
+        else:
+            self.status_label.configure(text="状态：运行中", text_color="#4CAF50")
+            self._show_notification("回放保存失败", "未能保存视频，请检查ffmpeg是否安装")
+
     def _update_tray_bursting(self):
         if self._tray:
             icon_image = self._create_default_icon()
@@ -648,7 +827,16 @@ class MainWindow:
             self._show_notification("连拍失败", "未能保存截图")
 
     def _show_notification(self, title, message):
+        # 如果已有通知窗口在显示，先销毁旧的避免重叠
+        if self._notification_window is not None:
+            try:
+                self._notification_window.destroy()
+            except Exception:
+                pass
+            self._notification_window = None
+
         notification = ctk.CTkToplevel(self.root)
+        self._notification_window = notification
         notification.overrideredirect(True)
         
         screen_width = self.root.winfo_screenwidth()
@@ -679,22 +867,37 @@ class MainWindow:
         )
         msg_label.pack(pady=5)
 
-        notification.after(2000, notification.destroy)
+        def _on_destroy():
+            self._notification_window = None
+            notification.destroy()
+
+        notification.after(2000, _on_destroy)
 
     def _show_main_window(self):
         self.root.after(0, lambda: (self.root.deiconify(), self.root.lift()))
 
-    def _open_burst_folder(self):
-        import os
-        folder_path = self.burst_save_folder
+    def _open_save_folder(self):
+        """根据当前模式打开对应的保存目录"""
+        if self.is_replay_mode:
+            folder_path = self.replay_save_folder
+            folder_label = "回放"
+        elif self.is_burst_mode:
+            folder_path = self.burst_save_folder
+            folder_label = "连拍"
+        else:
+            folder_path = self.burst_save_folder
+            folder_label = "截图"
         if os.path.exists(folder_path):
             os.startfile(folder_path)
         else:
-            self._show_notification("提示", "连拍目录不存在")
+            self._show_notification("提示", f"{folder_label}目录不存在")
 
     def _on_close(self):
         self.root.withdraw()
         self._show_notification("ZZZ PrtSc", "已最小化到系统托盘")
+
+    def _on_minimize(self):
+        self.root.iconify()
 
     def _quit_app(self):
         def do_quit():
@@ -702,12 +905,15 @@ class MainWindow:
                 self.hotkey_manager.stop()
             if self.gamepad_manager:
                 self.gamepad_manager.stop()
+            if self.instant_replay:
+                self.instant_replay.stop()
             if self._tray:
                 self._tray.stop()
             try:
                 self.root.destroy()
-            except:
+            except Exception:
                 pass
+            sys.exit(0)
         self.root.after(0, do_quit)
 
     def _get_resource_path(self, filename):
@@ -768,245 +974,6 @@ class MainWindow:
         
         button.bind("<Enter>", enter, add="+")
         button.bind("<Leave>", leave, add="+")
-
-
-class BurstSettingsDialog:
-    def __init__(self, parent, settings):
-        self.parent = parent
-        self.duration = settings.get("burst_duration", 3)
-        self.fps = settings.get("burst_fps", 3)
-        default_folder = str(Path.home() / "Pictures" / "Screenshots" / "Burst")
-        self.save_folder = settings.get("burst_save_folder", default_folder)
-        self.result = None
-        self._create_dialog()
-
-    def _create_dialog(self):
-        self.dialog = ctk.CTkToplevel(self.parent)
-        self.dialog.title("连拍设置")
-        self.dialog.geometry("360x220")
-        self.dialog.resizable(False, False)
-        self.dialog.transient(self.parent)
-        self.dialog.grab_set()
-        self.dialog.configure(fg_color="#fafafa")
-
-        main_frame = ctk.CTkFrame(self.dialog, fg_color="#fafafa")
-        main_frame.pack(fill=ctk.BOTH, expand=True, padx=20, pady=20)
-
-        title_label = ctk.CTkLabel(
-            main_frame,
-            text="连拍设置",
-            font=("Microsoft YaHei", 18, "bold"),
-            text_color="#1a1a1a"
-        )
-        title_label.pack(pady=(0, 15))
-
-        params_row = ctk.CTkFrame(main_frame, fg_color="transparent")
-        params_row.pack(fill=ctk.X, pady=(0, 12))
-
-        duration_col = ctk.CTkFrame(params_row, fg_color="transparent")
-        duration_col.pack(side=ctk.LEFT, fill=ctk.X, expand=True)
-
-        ctk.CTkLabel(
-            duration_col,
-            text="连拍时长",
-            font=("Microsoft YaHei", 12),
-            text_color="#666666"
-        ).pack(anchor=ctk.W, pady=(0, 5))
-
-        duration_input = ctk.CTkFrame(duration_col, fg_color="transparent")
-        duration_input.pack(fill=ctk.X)
-
-        self.duration_var = ctk.StringVar(value=str(self.duration))
-        duration_entry = ctk.CTkEntry(
-            duration_input,
-            textvariable=self.duration_var,
-            width=45,
-            height=28,
-            font=("Microsoft YaHei", 14),
-            justify=ctk.CENTER,
-            corner_radius=0,
-            fg_color="#ffffff",
-            border_width=1,
-            border_color="#e0e0e0"
-        )
-        duration_entry.pack(side=ctk.LEFT)
-
-        ctk.CTkLabel(
-            duration_input,
-            text="秒",
-            font=("Microsoft YaHei", 12),
-            text_color="#999999"
-        ).pack(side=ctk.LEFT, padx=5)
-
-        divider = ctk.CTkLabel(params_row, text="|", font=("Microsoft YaHei", 14), text_color="#e0e0e0")
-        divider.pack(side=ctk.LEFT, padx=15)
-
-        fps_col = ctk.CTkFrame(params_row, fg_color="transparent")
-        fps_col.pack(side=ctk.RIGHT, fill=ctk.X, expand=True)
-
-        ctk.CTkLabel(
-            fps_col,
-            text="拍摄频率",
-            font=("Microsoft YaHei", 12),
-            text_color="#666666"
-        ).pack(anchor=ctk.W, pady=(0, 5))
-
-        fps_input = ctk.CTkFrame(fps_col, fg_color="transparent")
-        fps_input.pack(fill=ctk.X)
-
-        self.fps_var = ctk.StringVar(value=str(self.fps))
-        fps_entry = ctk.CTkEntry(
-            fps_input,
-            textvariable=self.fps_var,
-            width=45,
-            height=28,
-            font=("Microsoft YaHei", 14),
-            justify=ctk.CENTER,
-            corner_radius=0,
-            fg_color="#ffffff",
-            border_width=1,
-            border_color="#e0e0e0"
-        )
-        fps_entry.pack(side=ctk.LEFT)
-
-        ctk.CTkLabel(
-            fps_input,
-            text="张/秒",
-            font=("Microsoft YaHei", 12),
-            text_color="#999999"
-        ).pack(side=ctk.LEFT, padx=5)
-
-        path_row = ctk.CTkFrame(main_frame, fg_color="transparent")
-        path_row.pack(fill=ctk.X, pady=(0, 12))
-
-        ctk.CTkLabel(
-            path_row,
-            text="保存路径",
-            font=("Microsoft YaHei", 12),
-            text_color="#666666"
-        ).pack(anchor=ctk.W, pady=(0, 6))
-
-        path_input = ctk.CTkFrame(path_row, fg_color="transparent")
-        path_input.pack(fill=ctk.X)
-
-        self.folder_var = ctk.StringVar(value=self.save_folder)
-        folder_entry = ctk.CTkEntry(
-            path_input,
-            textvariable=self.folder_var,
-            height=28,
-            font=("Microsoft YaHei", 11),
-            corner_radius=0,
-            fg_color="#ffffff",
-            border_width=1,
-            border_color="#e0e0e0"
-        )
-        folder_entry.pack(side=ctk.LEFT, fill=ctk.X, expand=True, padx=(0, 8))
-
-        browse_btn = ctk.CTkButton(
-            path_input,
-            text="⋮",
-            command=self._browse_folder,
-            width=28,
-            height=28,
-            corner_radius=0,
-            fg_color="#f0f0f0",
-            text_color="#666666",
-            hover_color="#e0e0e0",
-            font=("Microsoft YaHei", 14),
-            border_width=1,
-            border_color="#e0e0e0"
-        )
-        browse_btn.pack(side=ctk.RIGHT)
-
-        total_count = self.duration * self.fps
-        max_count = 30
-        actual_count = min(total_count, max_count)
-        
-        total_label = ctk.CTkLabel(
-            main_frame,
-            text=f"预计拍摄 {total_count} 张图片",
-            font=("Microsoft YaHei", 11),
-            text_color="#aaaaaa"
-        )
-        total_label.pack(pady=(0, 4))
-        
-        if total_count > max_count:
-            warning_label = ctk.CTkLabel(
-                main_frame,
-                text=f"[警告] 受内存限制，最多拍摄 {max_count} 张",
-                font=("Microsoft YaHei", 10),
-                text_color="#f57c00"
-            )
-            warning_label.pack(pady=(0, 12))
-        else:
-            spacer = ctk.CTkLabel(main_frame, text="", height=8)
-            spacer.pack()
-
-        ok_btn = ctk.CTkButton(
-            main_frame,
-            text="确定",
-            command=self._on_ok,
-            width=75,
-            height=30,
-            corner_radius=0,
-            fg_color="#4a90d9",
-            hover_color="#3d7bc4",
-            text_color="#ffffff",
-            font=("Microsoft YaHei", 12)
-        )
-        ok_btn.pack(pady=(0, 5))
-
-        self.dialog.protocol("WM_DELETE_WINDOW", self._on_ok)
-
-        self.dialog.update_idletasks()
-        x = (self.dialog.winfo_screenwidth() - self.dialog.winfo_width()) // 2
-        y = (self.dialog.winfo_screenheight() - self.dialog.winfo_height()) // 2
-        self.dialog.geometry(f"+{x}+{y}")
-
-    def _browse_folder(self):
-        folder = ctk.filedialog.askdirectory(initialdir=self.folder_var.get())
-        if folder:
-            self.folder_var.set(folder)
-            self.save_folder = folder
-
-    def _on_ok(self):
-        duration_str = self.duration_var.get().strip()
-        fps_str = self.fps_var.get().strip()
-
-        if not duration_str:
-            CTkMessagebox(title="错误", message="请输入连拍时长", icon="warning")
-            return
-
-        if not fps_str:
-            CTkMessagebox(title="错误", message="请输入拍摄频率", icon="warning")
-            return
-
-        try:
-            duration = int(duration_str)
-            fps = int(fps_str)
-
-            if duration <= 0:
-                CTkMessagebox(title="错误", message="连拍时长必须大于0", icon="warning")
-                return
-
-            if fps <= 0:
-                CTkMessagebox(title="错误", message="拍摄频率必须大于0", icon="warning")
-                return
-
-            self.result = {
-                "duration": duration,
-                "fps": fps,
-                "save_folder": self.folder_var.get()
-            }
-        except ValueError:
-            CTkMessagebox(title="错误", message="请输入有效的数字", icon="warning")
-            return
-
-        self.dialog.destroy()
-
-    def show(self):
-        self.parent.wait_window(self.dialog)
-        return self.result
 
 
 def main():

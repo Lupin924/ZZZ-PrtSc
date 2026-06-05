@@ -287,7 +287,7 @@ class ScreenshotCapture:
 
     def is_saving(self) -> bool:
         """检查是否正在保存到磁盘"""
-        return hasattr(self, '_save_thread') and self._save_thread and self._save_thread.is_alive()
+        return self._save_thread is not None and self._save_thread.is_alive()
 
     def _save_cache_to_disk(self, cache, save_folder, on_write_start, on_write_progress, on_complete):
         """后台线程将缓存写入磁盘"""
@@ -311,6 +311,5 @@ class ScreenshotCapture:
             on_complete(saved)
 
     def __del__(self):
-        if self._burst_thread and self._burst_thread.is_alive():
-            self._is_bursting = False
-            self._burst_thread.join(timeout=1.0)
+        """安全清理：仅设置标志位，不在GC中阻塞等待线程"""
+        self._is_bursting = False
