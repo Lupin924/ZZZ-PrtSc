@@ -6,7 +6,7 @@ import sys
 import shutil
 from pathlib import Path
 
-VERSION = "1.1.0"
+VERSION = "1.1.1"
 APP_NAME = "ZZZ_PrtSc"
 
 

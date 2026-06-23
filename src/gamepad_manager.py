@@ -217,7 +217,7 @@ class GamepadManager:
         self._api = None
         self._dev_id = 0
         self._last_button_states = []
-        self._share_button_indices = [8, 10]
+        self._share_button_indices = [8]  # DirectInput: 8=Share/Create/Capture
         self._scanning = False
         self._scan_complete = threading.Event()
         self._on_status_change = None
@@ -301,15 +301,15 @@ class GamepadManager:
                 self._connected = True
                 self.gamepad_name = name
 
-                if 'Sony' in name or 'DualSense' in name or 'PS5' in name:
+                if 'Sony' in name or 'DualSense' in name or 'PS5' in name or 'Wireless Controller' in name:
                     self.gamepad_type = 'ps5'
-                    self._share_button_indices = [8]
+                    self._share_button_indices = [8]  # DirectInput: 8=Share/Create
                 elif 'Switch' in name or 'Pro' in name:
                     self.gamepad_type = 'switch'
-                    self._share_button_indices = [8]
+                    self._share_button_indices = [8]  # DirectInput: 8=Capture
                 else:
                     self.gamepad_type = 'generic'
-                    self._share_button_indices = [8, 10]
+                    self._share_button_indices = [8]  # DirectInput: 8=Share/Capture (通用)
 
                 self._last_button_states = [False] * ctrl['num_buttons']
                 return True
@@ -353,6 +353,7 @@ class GamepadManager:
         self.gamepad_name = "Unknown Controller"
         self._api = None
         self._last_button_states = []
+        self._share_button_indices = [8]  # DirectInput: 8=Share/Create/Capture
         self._notify_status_change()
 
     def _notify_status_change(self):
